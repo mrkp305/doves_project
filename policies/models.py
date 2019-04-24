@@ -16,7 +16,6 @@ class Policy(models.Model):
         help_text=_("Number of dependants covered.")
     )
 
-
     class Meta:
         verbose_name = _("Policy")
         verbose_name_plural = _("Policies")

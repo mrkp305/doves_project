@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'policies.apps.PoliciesConfig',
     'members.apps.MembersConfig',
+    'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
