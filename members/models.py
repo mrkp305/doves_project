@@ -1,7 +1,7 @@
 from datetime import datetime, date
 
 from django.db import models
-from django.core.validators import ValidationError
+from django.core.validators import ValidationError, RegexValidator
 from django.utils.translation import ugettext_lazy as _
 
 from model_utils.models import TimeStampedModel
@@ -39,7 +39,13 @@ class Member(TimeStampedModel):
     )
     national_id = models.CharField(
         verbose_name=_("National ID"), max_length=12,
-        help_text=_("National ID number.")
+        help_text=_("National ID number."),
+        validators=[
+            RegexValidator(
+                regex=r'\d{2}\d{6,7}[a-zA-Z]{1}\d{2}',
+                message='ID Number should match format like: 58 398766 B 25, without the spaces.',
+            )
+        ]
     )
     date_of_birth = models.DateField(
         verbose_name=_("Date of birth"),
@@ -73,6 +79,11 @@ class Member(TimeStampedModel):
     def full_name(self):
         return f"{self.last_name} {self.first_name}".title()
     full_name.fget.short_description = _("Full name(s)")
+    
+    @property
+    def marital_status_display(self):
+        return self.get_marital_status_display()
+    marital_status_display.fget.short_description = _("Marital Status")
     
     @property
     def age(self):
@@ -162,7 +173,12 @@ class Dependant(TimeStampedModel):
         (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
         return age
     age.fget.short_description = _("Age")
-
+    
+    @property
+    def relationship_display(self):
+        return self.get_relationship_display()
+    relationship_display.fget.short_description = _("Relationship")
+    
     @property
     def member_name(self):
         return self.member.full_name
@@ -171,11 +187,13 @@ class Dependant(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
-
+    
     def clean(self):
         super(Dependant, self).clean()
-        if self.date_of_birth > datetime.now():
-            raise ValidationError(_("Date of birth cannot be greater than today's date."))
+        if self.date_of_birth > datetime.now().date():
+            raise ValidationError(
+                {'date_of_birth': _("Date of birth cannot be greater than today's date.")}
+            )
 
         if self.relationship == "O" and (self.relationship_description is None or self.relationship_description == ""):
             raise ValidationError(
@@ -184,10 +202,19 @@ class Dependant(TimeStampedModel):
 
         # Validate dependant count
         if self.member.policy is None:
-            raise ValidationError("%(member)s has not been registered for a policy yet.")
+            raise ValidationError(
+                _("%(member)s has not been registered for a policy yet."),
+                params={
+                    'member': self.member.full_name,
+                }
+            )
         else:
             policy = self.member.policy
-            if not self.member.dependant_count <= policy.dependants:
+            if self.member.dependant_count >= policy.dependants_per_holder:
                 raise ValidationError(
-                    _("You can only have %(dependants)s dependants under the %(policy)s policy.", dependants=policy.dependants, policy=policy.name.title())
+                    _("You can only have %(dependants)s dependants under the %(policy)s policy."),
+                    params={
+                        'dependants': policy.dependants_per_holder,
+                        'policy': policy.name.title(),
+                    }
                 )

@@ -11,7 +11,7 @@ class Policy(models.Model):
         verbose_name=_("Description"), max_length=500,
         help_text=_("Policy description.")
     )
-    dependants = models.PositiveSmallIntegerField(
+    dependants_per_holder = models.PositiveSmallIntegerField(
         verbose_name=_("Dependants"), default=1,
         help_text=_("Number of dependants covered.")
     )
@@ -21,4 +21,15 @@ class Policy(models.Model):
         verbose_name_plural = _("Policies")
 
     def __str__(self):
-        return str(self.name)
+        return str(self.name).title()
+
+    @property
+    def member_count(self):
+        return self.members.count()
+    member_count.fget.short_description = _("Policy holders")
+
+    @property
+    def dependant_count(self):
+        from members.models import Dependant
+        return Dependant.objects.filter(member__policy=self).count()
+    dependant_count.fget.short_description = _("Dependants Registered Under Policy")
