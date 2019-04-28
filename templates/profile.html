@@ -2,3 +2,196 @@
 {% block page_title %}
     Profile
 {% endblock %}
+{% block breadcrump %}
+    <ul class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">Home</a></li>
+        <li class="breadcrumb-item"><a href="#">Members</a></li>
+        <li class="breadcrumb-item"><span>Account</span></li>
+    </ul>
+{% endblock %}
+{% block page_content %}
+    <div class="content-box">
+        <div class="row">
+            <div class="col-sm-5">
+                <div class="user-profile compact">
+                    <div class="up-head-w" style="">
+
+                        <div class="up-main-info">
+                            <h2 class="up-header">{{ user.record }}</h2>
+                            <h6 class="up-sub-header">
+                                {{ user.record.policy }}
+                            </h6>
+                        </div>
+                        <svg class="decor" width="842px" height="219px" viewBox="0 0 842 219"
+                             preserveAspectRatio="xMaxYMax meet" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                             xmlns:xlink="http://www.w3.org/1999/xlink">
+                            <g transform="translate(-381.000000, -362.000000)" fill="#FFFFFF">
+                                <path class="decor-path"
+                                      d="M1223,362 L1223,581 L381,581 C868.912802,575.666667 1149.57947,502.666667 1223,362 Z"></path>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="up-controls">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <div class="value-pair">
+                                    <div class="label">Cash back Eligible:</div>
+                                    {% if user.record.cash_back_eligible %}
+                                        <div class="value badge badge-pill badge-success">
+                                            {{ user.record.cash_back_eligible }}
+                                        </div>
+                                    {% else %}
+                                        <div class="value badge badge-pill badge-danger">
+                                            {{ user.record.cash_back_eligible }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {#                            <div class="col-sm-3s text-right"><a class="btn btn-primary btn-sm" href="#"><i#}
+                            {#                                    class="os-icon os-icon-link-3"></i><span>Add to Friends</span></a></div>#}
+                        </div>
+                    </div>
+                    <div class="up-contents">
+                        <div class="m-b">
+                            <div class="row m-b">
+                                <div class="col-sm-6 b-r b-b">
+                                    <div class="el-tablo centered padded-v">
+                                        <div class="value">{{ user.record.dependant_count }}</div>
+                                        <div class="label">Dependant{{ user.dependant_count|pluralize }}.</div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 b-b">
+                                    <div class="el-tablo centered padded-v">
+                                        <div class="value">{{ user.record.claim_count }}</div>
+                                        <div class="label">Claim{{ user.record.claim_count|pluralize }} made.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="padded">
+                                <div class="os-progress-bar primary">
+                                    <div class="bar-labels">
+                                        <div class="bar-label-left">
+                                            <span>Dependants</span>
+                                        </div>
+                                        <div class="bar-label-right">
+                                            <span class="info">{{ user.record.dependant_count }}/{{ user.record.policy.dependants_per_holder }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="bar-level-1" style="width: 100%">
+                                        <div class="bar-level-2" style="width: 100%">
+                                            <div class="bar-level-3"
+                                                 style="width: {{ user.record.dependant_count_percentage|floatformat }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="element-wrapper">
+                    <div class="element-box"><h6 class="element-header">Claims</h6>
+                        <div class="timed-activities compact">
+                            {% for claim in user.record.claims %}
+                                <div class="timed-activity">
+                                    <div class="ta-date"><span>{{ claim.date_of_claim|date:'jS F, Y' }}</span></div>
+                                    <div class="ta-record-w">
+                                        <div class="ta-record">
+                                            <div class="ta-timestamp">
+                                                <strong>{{ claim.date_of_claim|timesince }}</strong> ago.
+                                            </div>
+                                            <div class="ta-activity">
+                                                Claim on dependant: {{ claim.dependant }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                No claims made yet.
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-7">
+                <div class="element-wrapper">
+                    <div class="element-box">
+                        <form method="post" action="">
+                            {% csrf_token %}
+                            <div class="element-info">
+                                <div class="element-info-with-icon">
+                                    <div class="element-info-icon">
+                                        <div class="os-icon os-icon-edit-1"></div>
+                                    </div>
+                                    <div class="element-info-text">
+                                        <h5 class="element-inner-header">
+                                            Update Account Info.
+                                        </h5>
+                                        <div class="element-inner-desc">
+                                           Update your details below to keep your record up-to-date. Note that some of the information can only be edited officially at your nearest branch.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% for element in form %}
+                                <div class="form-group">
+                                    <label for="{{ element.id_for_label }}">{{ element.label }}</label>
+                                    {{ element }}
+                                    <small class="form-text text-muted">
+                                        {{ element.help_text }}
+                                    </small>
+                                    <small class="text-danger">
+                                        {{ element.errors|first }}
+                                    </small>
+                                </div>
+                            {% endfor %}
+                            <div class="form-buttons-w">
+                                <button class="btn btn-primary" type="submit"> Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="content-panel">
+        <div class="content-panel-close"><i class="os-icon os-icon-close"></i></div>
+        <div class="element-wrapper"><h6 class="element-header">Dependant(s)</h6>
+            <div class="element-box-tp">
+                {% for dependant in user.record.dependants.all %}
+                    <div class="profile-tile">
+                        <div class="profile-tile-box">
+                            <div class="pt-avatar-w">
+                                {{ dependant.full_name }}
+                            </div>
+                            <div class="pt-user-name">
+                                {{ dependant.get_sex_display }}
+                                {% if not dependant.is_deceased %}
+                                    , {{ dependant.age }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="profile-tile-meta">
+                            <ul>
+                                <li>Relationship:<strong>{{ dependant.get_relationship_display }}</strong></li>
+                                <li>Added:<strong>{{ dependant.date_joined|date }}</strong></li>
+                                {% if dependant.is_deceased %}
+                                    <li>Deceased: {{ dependant.claim.date_of_death|date }}</li>
+                                {% else %}
+                                    <li>Age:<strong>{{ dependant.age }}</strong></li>
+                                {% endif %}
+
+                            </ul>
+                            <div class="pt-btn">
+                                {% if not dependant.is_deceased %}
+                                    <a class="btn btn-danger btn-sm" href="#">Remove Dependant</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    No dependants added yet.
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

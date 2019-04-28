@@ -1,0 +1,101 @@
+{% extends 'dashboard.html' %}
+{% block breadcrump %}
+    <ul class="breadcrumb">
+        <li class="breadcrumb-item"><a href="">Home</a></li>
+        <li class="breadcrumb-item"><a href="">Dependants</a></li>
+        <li class="breadcrumb-item"><a href="">{{dependant}}</a></li>
+        <li class="breadcrumb-item"><span>Edit</span></li>
+    </ul>
+{% endblock %}
+{% block page_content %}
+    <div class="content-box">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="element-wrapper">
+                    <div class="element-box">
+                        <form method="post" action="">
+                            {% csrf_token %}
+                            <h5 class="form-header">Edit <strong class="text-muted">{{ dependant }}</strong>'s Record</h5>
+                            <div class="form-desc">
+                                Update the desired field in the form below.
+                            </div>
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    <h6 class="alert-heading">Error!</h6>
+                                    <ul>
+                                        {% for err in form.non_field_errors %}
+                                            <li>{{ err }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            {% for hidden in form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                            {% for element in form.visible_fields %}
+                                <div class="form-group">
+                                    <label for="{{ element.id_for_label }}">
+                                        {{ element.label }}
+                                    </label>
+                                    {{ element }}
+                                    <small class="form-text text-muted">
+                                        {{ element.help_text }}
+                                    </small>
+                                    <small class="text-danger">
+                                        {{ element.errors|first }}
+                                    </small>
+                                </div>
+                            {% endfor %}
+
+                            <div class="form-buttons-w">
+                                <button class="btn btn-primary" type="submit"> Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-panel">
+        <div class="content-panel-close"><i class="os-icon os-icon-close"></i></div>
+        <div class="element-wrapper"><h6 class="element-header">Dependant(s) on record.</h6>
+            <div class="element-box-tp">
+                {% for dependant in user.record.dependants.all %}
+                    <div class="profile-tile">
+                        <div class="profile-tile-box">
+                            <div class="pt-avatar-w">
+                                {{ dependant.full_name }}
+                            </div>
+                            <div class="pt-user-name">
+                                {{ dependant.get_sex_display }}
+                                {% if not dependant.is_deceased %}
+                                    , {{ dependant.age }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="profile-tile-meta">
+                            <ul>
+                                <li>Relationship:<strong>{{ dependant.get_relationship_display }}</strong></li>
+                                <li>Added:<strong>{{ dependant.date_joined|date }}</strong></li>
+                                {% if dependant.is_deceased %}
+                                    <li>Deceased: {{ dependant.claim.date_of_death|date }}</li>
+                                {% else %}
+                                    <li>Age:<strong>{{ dependant.age }}</strong></li>
+                                {% endif %}
+
+                            </ul>
+                            <div class="pt-btn">
+                                {% if not dependant.is_deceased %}
+                                    <a class="btn btn-danger btn-sm" href="#">Remove Dependant</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    No dependants added yet.
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

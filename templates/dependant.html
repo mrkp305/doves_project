@@ -1,0 +1,118 @@
+{% extends 'dashboard.html' %}
+{% block breadcrump %}
+    <ul class="breadcrumb">
+        <li class="breadcrumb-item"><a href="">Home</a></li>
+        <li class="breadcrumb-item"><a href="">Dependants</a></li>
+        <li class="breadcrumb-item"><a href="">{{ dependant }}</a></li>
+    </ul>
+{% endblock %}
+{% block page_content %}
+    <div class="content-box">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="element-wrapper">
+                    <div class="element-box">
+                        <div class="row">
+                            <div class="col-md-7">
+                                <fieldset>
+                                    <legend><span>Details</span></legend>
+                                </fieldset>
+                                <dl>
+                                    <dt>Name</dt>
+                                    <dd class="lead">{{ dependant.full_name }}</dd>
+                                    <dt>Age</dt>
+                                    <dd class="lead">{{ dependant.age }}</dd>
+                                    <dt>Sex</dt>
+                                    <dd class="lead">{{ dependant.get_sex_display }}</dd>
+                                    <dt>Date Joined</dt>
+                                    <dd class="lead">{{ dependant.date_joined }}</dd>
+                                    <dt>Relationship</dt>
+                                    <dd class="lead">{{ dependant.get_relationship_display }}</dd>
+                                    {% if dependant.relationship == 'O' %}
+                                        <dt>Relationship Details</dt>
+                                        <dd class="lead">{{ dependant.relationship_description }}</dd>
+                                    {% endif %}
+                                </dl>
+                            </div>
+                            <div class="col-md-5">
+                                <fieldset>
+                                    <legend><span>Actions</span></legend>
+                                </fieldset>
+                                {% if dependant.is_deceased %}
+                                    <a href="javascript:(0)" class="btn btn-outline-danger">
+                                        DECEASED
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'members:edit_dependant' dependant.pk %}"
+                                       class="btn btn-outline-warning btn-sm">
+                                        <i class="os-icon os-icon-edit-3"></i> Edit Record
+                                    </a>
+                                    &nbsp;
+                                    <a href="" class="btn btn-outline-danger btn-sm float-right">
+                                        <i class="os-icon os-icon-database-remove"></i> Remove
+                                    </a>
+                                    <br>
+                                    <br>
+                                    <a href="" class="btn btn-outline-primary btn-lg btn-block">
+                                        Claim Funeral Cover
+                                    </a>
+                                {% endif %}
+                                <fieldset>
+                                    <legend><span>Record Audit</span></legend>
+                                </fieldset>
+                                <dl>
+                                    <dt><small>Added to System</small></dt>
+                                    <dd class="text-muted">{{ dependant.created }}</dd>
+                                    <dt><small>Last modified</small></dt>
+                                    <dd class="text-muted">{{ dependant.modified }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-panel">
+        <div class="content-panel-close"><i class="os-icon os-icon-close"></i></div>
+        <div class="element-wrapper"><h6 class="element-header">Dependant(s) on record.</h6>
+            <div class="element-box-tp">
+                {% for dependant in user.record.dependants.all %}
+                    <div class="profile-tile">
+                        <div class="profile-tile-box">
+                            <div class="pt-avatar-w">
+                                {{ dependant.full_name }}
+                            </div>
+                            <div class="pt-user-name">
+                                {{ dependant.get_sex_display }}
+                                {% if not dependant.is_deceased %}
+                                    , {{ dependant.age }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="profile-tile-meta">
+                            <ul>
+                                <li>Relationship:<strong>{{ dependant.get_relationship_display }}</strong></li>
+                                <li>Added:<strong>{{ dependant.date_joined|date }}</strong></li>
+                                {% if dependant.is_deceased %}
+                                    <li>Deceased: {{ dependant.claim.date_of_death|date }}</li>
+                                {% else %}
+                                    <li>Age:<strong>{{ dependant.age }}</strong></li>
+                                {% endif %}
+
+                            </ul>
+                            <div class="pt-btn">
+                                {% if not dependant.is_deceased %}
+                                    <a class="btn btn-danger btn-sm" href="#">Remove Dependant</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    No dependants added yet.
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

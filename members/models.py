@@ -5,6 +5,7 @@ from django.core.validators import ValidationError, RegexValidator
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.utils.timesince import timesince
+from django.urls import reverse
 
 from model_utils.models import TimeStampedModel
 
@@ -34,7 +35,7 @@ class Member(TimeStampedModel):
     user_account = models.OneToOneField(
         settings.AUTH_USER_MODEL, null=True, blank=True, verbose_name=_("User account"),
         on_delete=models.SET_NULL, editable=False,
-        related_name="registration_record", help_text=_("User account.")
+        related_name="record", help_text=_("User account.")
     )
     first_name = models.CharField(
         verbose_name=_("First name"), max_length=255,
@@ -106,6 +107,19 @@ class Member(TimeStampedModel):
     def dependant_count(self):
         return self.dependants.count()
     dependant_count.fget.short_description = _("Dependants")
+        
+    @property
+    def dependant_count_percentage(self):
+        return (self.dependant_count/self.policy.dependants_per_holder) * 100
+
+    @property
+    def claim_count(self):
+        return Claim.objects.filter(dependant__member=self).count()
+    claim_count.fget.short_description = _("Claims made")
+
+    @property
+    def claims(self):
+        return Claim.objects.filter(dependant__member=self)
 
     @property
     def last_claim_date(self):
@@ -123,8 +137,22 @@ class Member(TimeStampedModel):
             return (datetime.now().date() - self.last_claim_date.date_of_claim).days
 
     @property
+    def days_since_last_cashback(self):
+        if self.last_cashback_date is not None:
+            return (datetime.now().date() - self.last_cashback_date).days
+        else:
+            return 0
+
+    @property
+    def last_cashback_date(self):
+        try:
+            return self.cashback_records.order_by('-created')[0]
+        except:
+            return None
+
+    @property
     def cash_back_eligible(self):
-        if self.days_since_last_claim >= self.policy.cash_back_days:
+        if (self.days_since_last_cashback >= self.policy.cash_back_days) and (self.days_since_last_claim >= self.policy.cash_back_days):
             return True
         return False
     cash_back_eligible.fget.short_description = _("Cash back eligibile?")
@@ -200,6 +228,9 @@ class Dependant(TimeStampedModel):
     def __str__(self):
         return f"{self.full_name}, {self.sex}".title()
 
+    def get_absolute_url(self):
+        return reverse('members:view_dependant', kwargs={'pk':self.pk})
+
     @property
     def full_name(self):
         return f"{self.last_name} {self.first_name}".title()
@@ -250,7 +281,7 @@ class Dependant(TimeStampedModel):
                 )
             else:
                 policy = self.member.policy
-                if self.member.dependant_count + 1 >= policy.dependants_per_holder:
+                if self.member.dependant_count + 1 > policy.dependants_per_holder:
                     raise ValidationError(
                         _("You can only have %(dependants)s dependants under the %(policy)s policy."),
                         params={
@@ -366,3 +397,22 @@ class Request(TimeStampedModel):
     def full_name(self):
         return f"{self.last_name} {self.first_name}".title()
     full_name.fget.short_description = _("Full name(s)")
+
+
+class Cashback(TimeStampedModel):
+    member = models.ForeignKey(
+        Member, on_delete=models.CASCADE, verbose_name=_("Member"),
+        related_name="cashback_records", help_text=_("Member reference.")
+    )
+
+    amount = models.DecimalField(
+        verbose_name=_("Amount"), max_digits=19, decimal_places=4, help_text=_("Amount Requested"),
+    )
+
+    paid_out = models.BooleanField(
+        verbose_name=_("Paid out"), default=False, help_text=_("Paid out?"),
+    )
+
+    class Meta:
+        verbose_name = _("Cash back request")
+        verbose_name_plural = _("Cash back requests")

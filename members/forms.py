@@ -9,9 +9,11 @@ from django.contrib.auth import (
     authenticate,
 )
 
-from .models import Member
+from .models import Member, Dependant
+
 
 User = get_user_model()
+
 
 class RegisterForm(forms.Form):
     email = forms.EmailField(
@@ -90,6 +92,82 @@ class RegisterForm(forms.Form):
         member.user_account = user
         member.save()
         return True
+
+
+class MemberForm(forms.ModelForm):
+
+    class Meta:
+        model = Member
+        fields = ["first_name", "last_name", "email_address", "marital_status", ]
+        widgets = {
+            'first_name': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'last_name': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'email_address': forms.EmailInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'marital_status': forms.Select(
+                attrs={
+                    'class': 'form-control',
+                }
+            )
+        }
+
+
+class DependantForm(forms.ModelForm):
+
+    class Meta:
+        model = Dependant
+        fields =["member", "first_name", "last_name", "sex", "date_of_birth", "relationship", "relationship_description", ]
+
+        widgets = {
+            'member': forms.HiddenInput(
+
+            ),
+            'first_name': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'last_name': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'sex': forms.Select(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'date_of_birth': forms.DateInput(
+                attrs={
+                    'class': 'form-control',
+                    'type': 'date',
+                }
+            ),
+            'relationship': forms.Select(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'relationship_description': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 5,
+                    'cold': 30,
+                }
+            )
+        }
+
 
 
 class UsernameField(forms.CharField):
