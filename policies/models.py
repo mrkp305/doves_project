@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from model_utils.models import TimeStampedModel
 
 class Policy(models.Model):
     name = models.CharField(
@@ -14,6 +15,10 @@ class Policy(models.Model):
     dependants_per_holder = models.PositiveSmallIntegerField(
         verbose_name=_("Dependants"), default=1,
         help_text=_("Number of dependants covered.")
+    )
+    cash_back_days = models.PositiveSmallIntegerField(
+        verbose_name=_("Cash back days"), default=6,
+        help_text=_("Indicate the number of days without claiming qualifies a cash back.")
     )
 
     class Meta:

@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head><title>Doves Funeral Services - Login</title>
+    <meta charset="utf-8">
+    <meta content="ie=edge" http-equiv="x-ua-compatible">
+    <meta content="template language" name="keywords">
+    <meta content="Tamerlan Soziev" name="author">
+    <meta content="Admin dashboard html template" name="description">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="favicon.png" rel="shortcut icon">
+    <link href="apple-touch-icon.png" rel="apple-touch-icon">
+    <link href="http://fast.fonts.net/cssapi/175a63a1-3f26-476a-ab32-4e21cbdb8be2.css" rel="stylesheet" type="text/css">
+    <link href="{% static 'bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+    <link href="{% static 'bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+    <link href="{% static 'bower_components/dropzone/dist/dropzone.css' %}" rel="stylesheet">
+    <link href="{% static 'bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'bower_components/fullcalendar/dist/fullcalendar.min.css' %}" rel="stylesheet">
+    <link href="{% static 'bower_components/perfect-scrollbar/css/perfect-scrollbar.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/main8e16.css' %}" rel="stylesheet">
+</head>
+<body>
+<div class="all-wrapper menu-side with-pattern">
+    <div class="auth-box-w wider">
+        <div class="logo-w">
+            <a href=""><img alt="" src="{% static 'logo.jpg' %}"></a>
+        </div>
+        <h4 class="auth-header">Member Login</h4>
+        <form action="" method="post">
+            {% csrf_token %}
+            {% for err in form.non_field_errors %}
+                <ul style="align: left !important;">
+                    <li class="text-danger">{{ err }}</li>
+                </ul>
+            {% endfor %}
+
+            {% for element in form %}
+                <div class="form-group">
+                    <label for="{{ element.id_for_label }}">{{ element.label }}</label>
+                    {{ element }}
+                    <small class="form-text text-muted">
+                        {{ element.help_text }}
+                    </small>
+                    {% if element.errors %}
+                        <small class="text-danger">
+                            {{ element.errors|first }}
+                        </small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="buttons-w">
+                <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

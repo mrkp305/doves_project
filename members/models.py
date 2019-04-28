@@ -3,6 +3,8 @@ from datetime import datetime, date
 from django.db import models
 from django.core.validators import ValidationError, RegexValidator
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
+from django.utils.timesince import timesince
 
 from model_utils.models import TimeStampedModel
 
@@ -29,6 +31,11 @@ class Member(TimeStampedModel):
         (WIDOWED, 'Widowed'),
     )
 
+    user_account = models.OneToOneField(
+        settings.AUTH_USER_MODEL, null=True, blank=True, verbose_name=_("User account"),
+        on_delete=models.SET_NULL, editable=False,
+        related_name="registration_record", help_text=_("User account.")
+    )
     first_name = models.CharField(
         verbose_name=_("First name"), max_length=255,
         help_text=_("Member's first name(s).")
@@ -36,6 +43,9 @@ class Member(TimeStampedModel):
     last_name = models.CharField(
         verbose_name=_("Last name"), max_length=255,
         help_text=_("Member's last name.")
+    )
+    email_address = models.EmailField(
+        verbose_name=_("Email address"), unique=True, help_text=_("Member email address"),
     )
     national_id = models.CharField(
         verbose_name=_("National ID"), max_length=12,
@@ -97,13 +107,38 @@ class Member(TimeStampedModel):
         return self.dependants.count()
     dependant_count.fget.short_description = _("Dependants")
 
+    @property
+    def last_claim_date(self):
+        try:
+            return Claim.objects.filter(dependant__member=self).order_by('-date_of_claim')[0]
+        except:
+            return None
+    last_claim_date.fget.short_description = _("Last claim")
+
+    @property
+    def days_since_last_claim(self):
+        if self.last_claim_date is None:
+            return (datetime.now().date() - self.date_joined).days
+        else:
+            return (datetime.now().date() - self.last_claim_date.date_of_claim).days
+
+    @property
+    def cash_back_eligible(self):
+        if self.days_since_last_claim >= self.policy.cash_back_days:
+            return True
+        return False
+    cash_back_eligible.fget.short_description = _("Cash back eligibile?")
+
+
     def clean(self):
         super(Member, self).clean()
         if self.date_of_birth > datetime.now().date():
             raise ValidationError(_("Date of birth cannot be greater than today's date."))
         else:
             if self.age < 16:
-                raise ValidationError(_("Policy holders can only be 16 years and older."))
+                raise ValidationError(
+                    {'date_of_birth': _("Policy holders can only be 16 years and older.")}
+                )
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -153,6 +188,10 @@ class Dependant(TimeStampedModel):
         verbose_name=_("Date joined"),
         help_text=_("Date when dependant was registered.")
     )
+    is_deceased = models.BooleanField(
+        verbose_name=_("Deceased"), default=False, editable=False,
+        help_text=_("Mark dependant as deceased.")
+    )
 
     class Meta:
         verbose_name = _("Dependant")
@@ -200,21 +239,130 @@ class Dependant(TimeStampedModel):
                 {'relationship_description': _("Explain the relationship with dependant."),}
             )
 
-        # Validate dependant count
-        if self.member.policy is None:
-            raise ValidationError(
-                _("%(member)s has not been registered for a policy yet."),
-                params={
-                    'member': self.member.full_name,
-                }
-            )
-        else:
-            policy = self.member.policy
-            if self.member.dependant_count >= policy.dependants_per_holder:
+        if not self.pk:
+            # Validate dependant count
+            if self.member.policy is None:
                 raise ValidationError(
-                    _("You can only have %(dependants)s dependants under the %(policy)s policy."),
+                    _("%(member)s has not been registered for a policy yet."),
                     params={
-                        'dependants': policy.dependants_per_holder,
-                        'policy': policy.name.title(),
+                        'member': self.member.full_name,
                     }
                 )
+            else:
+                policy = self.member.policy
+                if self.member.dependant_count + 1 >= policy.dependants_per_holder:
+                    raise ValidationError(
+                        _("You can only have %(dependants)s dependants under the %(policy)s policy."),
+                        params={
+                            'dependants': policy.dependants_per_holder,
+                            'policy': policy.name.title(),
+                        }
+                    )
+
+
+class Claim(TimeStampedModel):
+
+    dependant = models.OneToOneField(
+        Dependant, on_delete=models.CASCADE, verbose_name=_("Dependant reference."),
+
+    )
+
+    date_of_claim = models.DateField(
+        verbose_name=_("Date of claim"),
+        help_text=_("Date when claim was made.")
+    )
+
+    place_of_death = models.CharField(
+        verbose_name=_("Place of birth"), max_length=255,
+        help_text=_("Place where policy dependant died.")
+    )
+
+    date_of_death = models.DateField(
+        verbose_name=_("Date of death"),
+        help_text=_("Date when the deceased died as reflected on death certificate.")
+    )
+
+    class Meta:
+        verbose_name_plural = _('Claims')
+
+    def __str__(self):
+        return f"Dependant #{self.dependant.id} - {self.dependant}"
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super(Claim, self).save(*args, **kwargs)
+        self.dependant.is_deceased = True
+        self.dependant.save()
+
+
+class Request(TimeStampedModel):
+    first_name = models.CharField(
+        verbose_name=_("First name"), max_length=255,
+        help_text=_("Client first name(s).")
+    )
+    last_name = models.CharField(
+        verbose_name=_("Last name"), max_length=255,
+        help_text=_("Client's last name.")
+    )
+    national_id = models.CharField(
+        verbose_name=_("National ID"), max_length=12,
+        help_text=_("Client National ID number."),
+        validators=[
+            RegexValidator(
+                regex=r'\d{2}\d{6,7}[a-zA-Z]{1}\d{2}',
+                message='ID Number should match format like: 58 398766 B 25, without the spaces.',
+            )
+        ]
+    )
+    email_address = models.EmailField(
+        verbose_name=_("Email Address"), max_length=255,
+        help_text=_("Client's email address"),
+    )
+    phone = models.CharField(
+        verbose_name=_("Phone number"), max_length=10,
+        help_text=_("Client's contact phone number.")
+    )
+    sex = models.CharField(
+        verbose_name=_("Sex"), max_length=1,
+        choices=Member.SEX_CHOICES,
+        help_text=_("Client's sex orientation.")
+    )
+    address = models.TextField(
+        verbose_name=_("Address"), max_length=255,
+        help_text=_("Address where services are required.")
+    )
+    details = models.TextField(
+        verbose_name=_("Details"), max_length=1000,
+        help_text=_("Detailed description of required services or assistance.")
+    )
+    lat = models.CharField(
+        verbose_name=_("Latitude"), max_length=255, editable=False,
+        help_text=_("Latitude coordinate.")
+    )
+    lng = models.CharField(
+        verbose_name=_("Longitude"), max_length=255, editable=False,
+        help_text=_("Longitude coordinate.")
+    )
+    deceased_death_certificate = models.FileField(
+        verbose_name=_("Deceased's death certificate"), upload_to="requests/certs/",
+    )
+
+    class Meta:
+        verbose_name_plural = _("Requests")
+
+    def __str__(self):
+        return f"{self.last_name}, {self.first_name}"
+
+    @property
+    def requested(self):
+        return f"{timesince(self.created)} ago"
+    requested.fget.short_description = _("Requested")
+
+    @property
+    def coordinates(self):
+        return f"{self.lat, self.lng}"
+
+    @property
+    def full_name(self):
+        return f"{self.last_name} {self.first_name}".title()
+    full_name.fget.short_description = _("Full name(s)")
