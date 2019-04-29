@@ -402,6 +402,13 @@ class Request(TimeStampedModel):
     def coordinates(self):
         return f"{self.lat, self.lng}"
 
+    def get_absolute_url(self):
+        return reverse(
+            'view_request', kwargs={
+                'pk': self.pk,
+            }
+        )
+
     @property
     def full_name(self):
         return f"{self.last_name} {self.first_name}".title()

@@ -1,0 +1,31 @@
+{% extends 'dashboard.html' %}
+{% block breadcrump %}
+    <ul class="breadcrumb">
+        <li class="breadcrumb-item"><a href="">Home</a></li>
+        <li class="breadcrumb-item"><a href="">Members</a></li>
+        <li class="breadcrumb-item"><span>Health Assessment</span></li>
+    </ul>
+{% endblock %}
+{% block page_title %}
+    Health Assessment
+{% endblock %}
+{% block page_content %}
+    <div class="content-box">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="element-wrapper">
+                    <div class="element-box">
+                        <form method="post" action="">
+                            {% csrf_token %}
+                            <h5 class="form-header">Health Assessment (Powered by <a
+                                    href="https://www.healthy.co.nz/assessment">healthy.co.nz</a>)</h5>
+                            <iframe seamless="seamless" style="width: 100%; height: 470px;" src="https://www.healthy.co.nz/assessment" frameborder="0">
+
+                            </iframe>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

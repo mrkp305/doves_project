@@ -1,0 +1,171 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head><title>Get Instant Cover</title>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="favicon.png" rel="shortcut icon">
+    <link href="apple-touch-icon.png" rel="apple-touch-icon">
+    <link href="http://fast.fonts.net/cssapi/175a63a1-3f26-476a-ab32-4e21cbdb8be2.css" rel="stylesheet" type="text/css">
+    <link href="{% static 'bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+    <link href="{% static 'bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+    <link href="{% static 'bower_components/dropzone/dist/dropzone.css' %}" rel="stylesheet">
+    <link href="{% static 'bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'bower_components/fullcalendar/dist/fullcalendar.min.css' %}" rel="stylesheet">
+    <link href="{% static 'bower_components/perfect-scrollbar/css/perfect-scrollbar.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'leaflet/leaflet.css' %}"/>
+    <link href="{% static 'css/main8e16.css' %}" rel="stylesheet">
+</head>
+<body>
+<div class="all-wrapper menu-side no-padding-content white-bg-content">
+    <div class="layout-w">
+        <div class="content-w">
+            <div class="content-i">
+                <div class="content-box">
+                    <div class="section-heading centered"><h1>Instant Funeral Cover</h1>
+                        <p>
+                            Request made {{ request.created|timesince }} ago.
+                        </p>
+                    </div>
+                    <div class="pricing-plans row no-gutters">
+                        <div class="pricing-plan col-sm-8">
+                            <div class="plan-head">
+                                <div class="plan-image"><img alt="" src="{% static 'img/plan1.png' %}"></div>
+                                <div class=" plan-name">
+                                    Location
+                                </div>
+                            </div>
+                            <div style="padding: 3px 2px 0px 2px;" class="plan-description">
+                                {% if request.lat and request.lng %}
+                                    <div style="height: 1000px; width: 100% !important;" id="mapid"></div>
+                                {% else %}
+                                    No map data available.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="pricing-plan col-sm-4">
+                            <div class="plan-head">
+                                <div class="plan-image"><img alt="" src="{% static 'img/plan4.png' %}"></div>
+                                <div class=" plan-name">Details:
+                                </div>
+                            </div>
+                            <div class="plan-description">
+                                <dl>
+                                    <dt>Name</dt>
+                                    <dd class="lead">{{ request.full_name }}</dd>
+                                    <dt>National ID Number</dt>
+                                    <dd class="lead">{{ request.national_id }}</dd>
+                                    <dt>Email Address</dt>
+                                    <dd class="lead">
+                                        {{ request.email_address }}
+                                        <a href="mailto:{{ request.email_address }}"
+                                           class="btn btn-sm btn-outline-success">Send Email <i
+                                                class="os-icon os-icon-arrow-right3"></i> </a>
+                                    </dd>
+                                    <dt>Phone Number</dt>
+                                    <dd class="lead">
+                                        {{ request.phone }}
+                                        <br>
+                                        <a href="tel:{{ request.phone }}"
+                                           class="btn btn-sm btn-outline-success">
+                                            Call Person <i class="os-icon os-icon-phone-15"></i>
+                                        </a>
+                                    </dd>
+                                    <dt>Address</dt>
+                                    <dd class="lead">
+                                        {{ request.address }}
+                                    </dd>
+                                    <dt>Details</dt>
+                                    <dd class="lead">
+                                        {{ request.details }}
+                                    </dd>
+                                    <hr>
+                                    {% if request.deceased_death_certificate %}
+                                        <a href="{{ request.deceased_death_certificate.url }}"
+                                           class="btn btn-outline-success">
+                                            <i class="os-icon os-icon-documents-03"></i> Death Certificate
+                                        </a>
+                                    {% endif %}
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="display-type"></div>
+</div>
+<script src="{% static 'bower_components/jquery/dist/jquery.min.js' %}"></script>
+<script src="{% static 'bower_components/moment/moment.js' %}"></script>
+<script src="{% static 'bower_components/chart.js/dist/Chart.min.js' %}"></script>
+<script src="{% static 'bower_components/select2/dist/js/select2.full.min.js' %}"></script>
+<script src="{% static 'bower_components/ckeditor/ckeditor.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap-validator/dist/validator.min.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
+<script src="{% static 'bower_components/dropzone/dist/dropzone.js' %}"></script>
+<script src="{% static 'bower_components/editable-table/mindmup-editabletable.js' %}"></script>
+<script src="{% static 'bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+<script src="{% static 'bower_components/fullcalendar/dist/fullcalendar.min.js' %}"></script>
+<script src="{% static 'bower_components/perfect-scrollbar/js/perfect-scrollbar.jquery.min.js' %}"></script>
+<script src="{% static 'bower_components/tether/dist/js/tether.min.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap/js/dist/util.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap/js/dist/alert.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap/js/dist/button.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap/js/dist/carousel.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap/js/dist/collapse.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap/js/dist/dropdown.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap/js/dist/modal.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap/js/dist/tab.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap/js/dist/tooltip.js' %}"></script>
+<script src="{% static 'bower_components/bootstrap/js/dist/popover.js' %}"></script>
+<script src="{% static 'leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/main8e16.js' %}"></script>
+<script>(function (i, s, o, g, r, a, m) {
+    i['GoogleAnalyticsObject'] = r;
+    i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+    a = s.createElement(o),
+        m = s.getElementsByTagName(o)[0];
+    a.async = 1;
+    a.src = g;
+    m.parentNode.insertBefore(a, m)
+})(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+ga('create', 'UA-42863888-9', 'auto');
+ga('send', 'pageview');</script>
+{% if request.lat and request.lng %}
+    <script>
+        $(document).ready(function () {
+
+            var mymap = L.map('mapid').setView([{{ request.lat }}, {{ request.lng }}], 17);
+            var layerGroup = L.layerGroup().addTo(mymap);
+            L.marker([{{ request.lat }}, {{ request.lng }}], {draggable: false}).addTo(layerGroup);
+
+            var satellite = L.tileLayer(
+                'http://{s}.google.com/vt/lyrs=s,m&x={x}&y={y}&z={z}', {
+                    maxZoom: 20,
+                    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+                }).addTo(mymap);
+
+            var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 20
+                }
+            ).addTo(mymap);
+
+            L.control.layers(
+                {
+                    "Plain": osm,
+                    "Satellite": satellite
+
+                }
+            ).addTo(mymap);
+        });
+    </script>
+{% endif %}
+</body>
+</html>

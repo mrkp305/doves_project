@@ -104,6 +104,9 @@ TIME_ZONE = 'Africa/Harare'
 
 USE_I18N = True
 
+LOGIN_URL = "/members/login/"
+LOGIN_REDIRECT_URL = "/members/profile/"
+
 USE_L10N = True
 
 USE_TZ = True

@@ -216,3 +216,13 @@ isucc_view = ISucc.as_view()
 
 class ViReq(generic.DetailView):
     model = Request
+    template_name = "request.html"
+    context_object_name = "request"
+
+view_request_view = ViReq.as_view()
+
+
+class HeAss(generic.TemplateView):
+    template_name = "heass.html"
+
+heath_assessment_view = HeAss.as_view()

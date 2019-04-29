@@ -6,7 +6,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from .views import (
     register_view, login_view, profile_view, add_dependant_view, view_dependant_view,
     dependants_view, edit_dependant_view, delete_dependant_view, claims_view, claim_cover_view,
-    cash_request_view, cashbacks_view, delete_cash_back_view, index_view
+    cash_request_view, cashbacks_view, delete_cash_back_view, heath_assessment_view
 )
 
 app_name = "members"
@@ -35,6 +35,7 @@ urlpatterns = [
     path("register/", register_view, name="register"),
     path("login/", login_view, name="login"),
     path('profile/', profile_view, name='profile'),
+    path('health-assessment/', heath_assessment_view, name='health_assessment'),
     path('dependants/', include(dependant_patterns)),
     path('claims/', include(claim_patterns)),
     path('cashback/', include(cash_patterns)),
