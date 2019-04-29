@@ -1,0 +1,87 @@
+{% extends 'dashboard.html' %}
+{% block breadcrump %}
+    <ul class="breadcrumb">
+        <li class="breadcrumb-item"><a href="">Home</a></li>
+        <li class="breadcrumb-item"><a href="">Members</a></li>
+        <li class="breadcrumb-item"><span>Claim Cover</span></li>
+    </ul>
+{% endblock %}
+{% block page_content %}
+    <div class="content-box">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="element-wrapper">
+                    <div class="element-box">
+                        <form method="post" action="">
+                            {% csrf_token %}
+                            <h5 class="form-header">Claim Funeral Cover for dependant: <span class="text-primary">
+                                {{ dependant }}
+                            </span></h5>
+                            <div class="form-desc">
+                                Fill in the form below to sent your claim.
+                            </div>
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    <h6 class="alert-heading">Error!</h6>
+                                    <ul>
+                                        {% for err in form.non_field_errors %}
+                                            <li>{{ err }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            {% for hidden in form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                            {% for element in form.visible_fields %}
+                                <div class="form-group">
+                                    <label for="{{ element.id_for_label }}">
+                                        {{ element.label }}
+                                    </label>
+                                    {{ element }}
+                                    <small class="form-text text-muted">
+                                        {{ element.help_text }}
+                                    </small>
+                                    <small class="text-danger">
+                                        {{ element.errors|first }}
+                                    </small>
+                                </div>
+                            {% endfor %}
+
+                            <div class="form-buttons-w">
+                                <button class="btn btn-primary" type="submit"> Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-panel">
+        <div class="content-panel-close"><i class="os-icon os-icon-close"></i></div>
+        <div class="element-wrapper"><h6 class="element-header">Previous Claims.</h6>
+            <div class="element-box-tp">
+                {% for claim in user.record.claims %}
+                    <div class="profile-tile">
+                        <div class="profile-tile-box">
+                            <div class="pt-avatar-w">
+                                {{claim.dependant.full_name}}
+                            </div>
+                            <div class="pt-user-name">
+                                {{ claim.date_of_claim }}
+                            </div>
+                        </div>
+                        <div class="profile-tile-meta">
+                            <ul>
+                                <li>Send Date:<strong>{{ claim.created }}</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                {% empty %}
+                    No claims made yet.
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

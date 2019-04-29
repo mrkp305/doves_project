@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from .models import (
-    Member, Dependant, Claim, Request
+    Member, Dependant, Claim, Request, Cashback
 )
 
 
@@ -31,3 +31,9 @@ class ClaimAdmin(admin.ModelAdmin):
 class RequestAdmin(admin.ModelAdmin):
     list_display = ["full_name", "national_id", "email_address", "phone", "address", "requested", ]
     list_filter = ["created", ]
+
+@admin.register(Cashback)
+class CashbackAdmin(admin.ModelAdmin):
+    list_display = ["member", "amount", "paid_out", ]
+    list_filter = ["created", "paid_out", ]
+    search_fields = ["member", ]

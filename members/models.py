@@ -139,9 +139,9 @@ class Member(TimeStampedModel):
     @property
     def days_since_last_cashback(self):
         if self.last_cashback_date is not None:
-            return (datetime.now().date() - self.last_cashback_date).days
+            return (datetime.now().date() - self.last_cashback_date.created.date()).days
         else:
-            return 0
+            return (datetime.now().date() - self.date_joined).days
 
     @property
     def last_cashback_date(self):
@@ -304,7 +304,7 @@ class Claim(TimeStampedModel):
     )
 
     place_of_death = models.CharField(
-        verbose_name=_("Place of birth"), max_length=255,
+        verbose_name=_("Place of death"), max_length=255,
         help_text=_("Place where policy dependant died.")
     )
 
@@ -318,6 +318,15 @@ class Claim(TimeStampedModel):
 
     def __str__(self):
         return f"Dependant #{self.dependant.id} - {self.dependant}"
+
+    def clean(self):
+        super(Claim, self).clean()
+        if self.date_of_death > datetime.now().date():
+            raise ValidationError(
+                {
+                    'date_of_death': "Date of death cannot be greater than today's date!"
+                }
+            )
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -367,11 +376,11 @@ class Request(TimeStampedModel):
         help_text=_("Detailed description of required services or assistance.")
     )
     lat = models.CharField(
-        verbose_name=_("Latitude"), max_length=255, editable=False,
+        verbose_name=_("Latitude"), max_length=255,
         help_text=_("Latitude coordinate.")
     )
     lng = models.CharField(
-        verbose_name=_("Longitude"), max_length=255, editable=False,
+        verbose_name=_("Longitude"), max_length=255,
         help_text=_("Longitude coordinate.")
     )
     deceased_death_certificate = models.FileField(

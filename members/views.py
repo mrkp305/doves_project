@@ -7,8 +7,11 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.contrib import messages
 
-from .forms import RegisterForm, AuthenticationForm, MemberForm, DependantForm
-from .models import Member, Dependant
+from .forms import (
+    RegisterForm, AuthenticationForm, MemberForm, DependantForm,
+    ClaimForm, CashbackForm, RequestForm
+)
+from .models import Member, Dependant, Claim, Cashback, Request
 
 
 class Register(generic.edit.FormView, generic.View):
@@ -110,3 +113,106 @@ class Dependants(generic.ListView):
     template_name = "dependants.html"
 
 dependants_view = Dependants.as_view()
+
+
+class ClaimCover(LoginRequiredMixin, generic.CreateView):
+    form_class = ClaimForm
+    template_name = "claim.html"
+    success_url = reverse_lazy("members:claims")
+
+    def get_context_data(self, **kwargs):
+        c = super(ClaimCover, self).get_context_data(**kwargs)
+        c["dependant"] = self.request.user.record.dependants.get(pk=self.kwargs['dependant'])
+        return c
+
+    def form_valid(self, form):
+        form.instance.dependant = Dependant.objects.get(pk=self.kwargs['dependant'])
+        messages.success(request=self.request, message="Claim send")
+        return super(ClaimCover, self).form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(request=self.request, message="Failed to submit claim. Please check form and try again.")
+        return super(ClaimCover, self).form_invalid(form)
+
+    def get(self, request, *args, **kwargs):
+        self.initial['dependant'] = self.request.user.record.dependants.get(pk=self.kwargs['dependant'])
+        self.initial['date_of_claim'] = datetime.datetime.now().date()
+        return super().get(self.request, *args, **kwargs)
+
+claim_cover_view = ClaimCover.as_view()
+
+
+class Claims(generic.ListView):
+    model = Claim
+    template_name = "claims.html"
+    context_object_name = "claims"
+
+    def get_queryset(self):
+        return self.request.user.record.claims
+
+claims_view = Claims.as_view()
+
+
+class Cashbacks(generic.ListView):
+    model = Cashback
+    template_name = "cashbacks.html"
+    context_object_name = "cashbacks"
+
+    def get_queryset(self):
+        return self.request.user.record.cashback_records.all()
+
+cashbacks_view = Cashbacks.as_view()
+
+
+class CashbackRequest(generic.CreateView):
+    template_name = "cashback.html"
+    success_url = reverse_lazy("members:cashbacks")
+    form_class = CashbackForm
+
+    def form_valid(self, form):
+        messages.success(request=self.request, message="Cashback request sent.")
+        return super(CashbackRequest, self).form_valid(form)
+
+    def get(self, request, pk):
+        self.initial['member'] = self.request.user.record
+        return super().dispatch(request, *args, **kwargs)
+    
+    def form_invalid(self, form):
+        messages.error(request=self.request, message="Failed to sent request, please check form.")
+        return super(CashbackRequest, self).form_invalid(form)
+
+    def dispatch(self, request, *args, **kwargs):
+        self.initial['member'] = self.request.user.record
+        return super().dispatch(request, *args, **kwargs)
+
+cash_request_view = CashbackRequest.as_view()
+
+
+class DeleteCashBack(generic.View):
+
+    def get(self, request, pk):
+        Cashback.objects.get(pk=pk).delete()
+        HttpResponseRedirect(reverse_lazy('members:cashbacks'))
+
+delete_cash_back_view = DeleteCashBack.as_view()
+
+
+class Index(generic.TemplateView):
+    template_name = "home.html"
+
+index_view = Index.as_view()
+
+
+class InstantCover(generic.CreateView):
+    template_name = "instant.html"
+    form_class = RequestForm
+    success_url = reverse_lazy("succ")
+instant_cover_view = InstantCover.as_view()
+
+class ISucc(generic.TemplateView):
+    template_name = "succ.html"
+isucc_view = ISucc.as_view()
+
+
+class ViReq(generic.DetailView):
+    model = Request

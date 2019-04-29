@@ -9,7 +9,7 @@ from django.contrib.auth import (
     authenticate,
 )
 
-from .models import Member, Dependant
+from .models import Member, Dependant, Claim, Request, Cashback
 
 
 User = get_user_model()
@@ -168,6 +168,94 @@ class DependantForm(forms.ModelForm):
             )
         }
 
+
+class ClaimForm(forms.ModelForm):
+
+    class Meta:
+        fields = ['date_of_claim', 'place_of_death', 'date_of_death', ]
+        model = Claim
+        widgets = {
+            'date_of_claim': forms.HiddenInput(),
+            'place_of_death': forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            'date_of_death': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'form-control',
+                }
+            )
+        }
+
+
+class RequestForm(forms.ModelForm):
+
+    class Meta:
+        model = Request
+        fields = ["first_name", "last_name", "sex", "email_address", "national_id", "address", "lat", "lng", "details", "phone", "deceased_death_certificate", ]
+        widgets = {
+            "lat": forms.HiddenInput(),
+            "lng": forms.HiddenInput(),
+            "first_name": forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            "last_name": forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            "email_address": forms.EmailInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            "sex": forms.Select(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            "national_id": forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            "address": forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            "phone": forms.TextInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+            "deceased_death_certificate": forms.FileInput(
+                attrs={
+                    'class': 'form-control',
+                }
+            ),
+        }
+
+
+class CashbackForm(forms.ModelForm):
+
+    class Meta:
+        model = Cashback
+        fields = ['amount', 'member', ]
+        widgets = {
+            'member': forms.HiddenInput(),
+            'amount': forms.NumberInput(
+                attrs={
+                    'step': '0.01',
+                    'min': '10.00',
+                    'class': 'form-control',
+                }
+            )
+        }
 
 
 class UsernameField(forms.CharField):

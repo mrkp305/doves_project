@@ -1,0 +1,96 @@
+{% extends 'dashboard.html' %}
+{% block breadcrump %}
+    <ul class="breadcrumb">
+        <li class="breadcrumb-item"><a href="">Home</a></li>
+        <li class="breadcrumb-item"><a href="">Cashback</a></li>
+        <li class="breadcrumb-item"><span>Request</span></li>
+    </ul>
+{% endblock %}
+{% block page_content %}
+    <div class="content-box">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="element-wrapper">
+                    <div class="element-box">
+                        <form method="post" action="">
+                            {% csrf_token %}
+                            <h5 class="form-header">Request Cashback</h5>
+                            <div class="form-desc">
+                                Fill in the form below to sent your request.
+                            </div>
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger" role="alert">
+                                    <h6 class="alert-heading">Error!</h6>
+                                    <ul>
+                                        {% for err in form.non_field_errors %}
+                                            <li>{{ err }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            {% for hidden in form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+                            {% for element in form.visible_fields %}
+                                <div class="form-group">
+                                    <label for="{{ element.id_for_label }}">
+                                        {{ element.label }}
+                                    </label>
+                                    {{ element }}
+                                    <small class="form-text text-muted">
+                                        {{ element.help_text }}
+                                    </small>
+                                    <small class="text-danger">
+                                        {{ element.errors|first }}
+                                    </small>
+                                </div>
+                            {% endfor %}
+
+                            <div class="form-buttons-w">
+                                <button class="btn btn-primary" type="submit"> Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-panel">
+        <div class="content-panel-close"><i class="os-icon os-icon-close"></i></div>
+        <div class="element-wrapper"><h6 class="element-header">Previous Requests.</h6>
+            <div class="element-box-tp">
+                {% for cash in user.record.cashback_records.all %}
+                    <div class="profile-tile">
+                        <div class="profile-tile-box">
+                            <div class="pt-avatar-w">
+                                ${{ cash.amount|floatformat }}
+                            </div>
+                            <div class="pt-user-name">
+                                {% if cash.paid_out %}
+                                    Paid Out
+                                {% else %}
+                                    Pending
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="profile-tile-meta">
+                            <ul>
+                                <li>Date:<strong>{{ cash.created }}</strong></li>
+                                <li>Paid Out?:<strong>{{ cash.paid_out }}</strong></li>
+
+                            </ul>
+                            <div class="pt-btn">
+                                {% if not cash.paid_out %}
+                                    <a class="btn btn-danger btn-sm" href="#">Remove Request</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    No requests added yet.
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

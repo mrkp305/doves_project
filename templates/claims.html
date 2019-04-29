@@ -1,0 +1,65 @@
+{% extends 'dashboard.html' %}
+{% block page_title %}
+    Funeral Cover Claim History
+{% endblock %}
+{% block breadcrump %}
+    <ul class="breadcrumb">
+        <li class="breadcrumb-item"><a href="">Home</a></li>
+        <li class="breadcrumb-item"><a href="">Mambers</a></li>
+        <li class="breadcrumb-item"><span>Claims</span></li>
+    </ul>
+{% endblock %}
+{% block cpt %}{% endblock %}
+{% block page_content %}
+    <div class="content-box">
+        <div class="element-wrapper">
+            <h6 class="element-header">Funeral Cover Claim History</h6>
+            <div class="element-box">
+                <h5 class="form-header">{{ user.record.full_name }}'s Claim History</h5>
+                <div class="form-desc">
+                    Below is a list of funeral claims that you have or have been made on your policy record.
+                </div>
+                <div class="table-responsive">
+                    <table id="tblhhD" width="100%" class="table table-striped table-hover table-lightfont">
+                        <thead>
+                        <tr>
+                            <th>Claim on</th>
+                            <th>Date of Claim</th>
+                            <th>Place of Death</th>
+                            <th>Date of Death</th>
+                        </tr>
+                        </thead>
+                        <tfoot>
+                        <tr>
+                            <th>Claim on</th>
+                            <th>Date of Claim</th>
+                            <th>Place of Death</th>
+                            <th>Date of Death</th>
+                        </tr>
+                        </tfoot>
+                        <tbody>
+                        {% for claim in claims %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'members:view_dependant' claim.dependant.pk %}">
+                                        {{ claim.dependant.full_name }}
+                                    </a>
+                                </td>
+                                <td>{{ claim.date_of_claim }}</td>
+                                <td>{{ claim.place_of_death }}</td>
+                                <td>{{ claim.date_of_death }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block js %}
+    <script>
+        $("#tblD").dataTable()
+    </script>
+{% endblock %}

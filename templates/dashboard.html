@@ -240,11 +240,17 @@ START - Menu side
                         </ul>
                     </li>
 
-                    <li class=""><a href="#">
+                    <li class=""><a href="{% url 'members:claims' %}">
                         <div class="icon-w">
                             <div class="os-icon os-icon-tasks-checked"></div>
                         </div>
                         <span>Claims</span></a>
+                    </li>
+                    <li class=""><a href="{% url 'members:cashbacks' %}">
+                        <div class="icon-w">
+                            <div class="os-icon os-icon-checkmark"></div>
+                        </div>
+                        <span>Cashback Requests</span></a>
                     </li>
 
                 </ul>
