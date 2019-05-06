@@ -33,7 +33,7 @@
         <form action="" method="post">
             {% csrf_token %}
             {% for err in form.non_field_errors %}
-                <ul style="align: left !important;">
+                <ul>
                     <li class="text-danger">{{ err }}</li>
                 </ul>
             {% endfor %}
@@ -54,7 +54,11 @@
             {% endfor %}
 
             <div class="buttons-w">
-                <button type="submit" class="btn btn-primary">Register Now</button>
+                <button type="submit" class="btn btn-primary">Register Now</button> or
+                <a href="{% url 'members:login' %}" class="btn btn-success">
+                    <i class="fa fa-arrow-left"></i>
+                    Click here to login
+                </a>
             </div>
         </form>
     </div>

@@ -1,6 +1,7 @@
 import datetime
 
 from django.contrib.auth import views as auth_views
+from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views import generic
 from django.http import HttpResponse, HttpResponseRedirect
@@ -13,6 +14,10 @@ from .forms import (
 )
 from .models import Member, Dependant, Claim, Cashback, Request
 
+
+def logout_view(request):
+    logout(request)
+    return HttpResponseRedirect('/')
 
 class Register(generic.edit.FormView, generic.View):
     template_name = "register.html"
@@ -34,11 +39,18 @@ class Login(auth_views.LoginView):
 login_view = Login.as_view()
 
 
-class Profile(LoginRequiredMixin, generic.edit.UpdateView, generic.View):
+class Profile(LoginRequiredMixin, UserPassesTestMixin, generic.edit.UpdateView, generic.View):
     template_name = 'profile.html'
     form_class = MemberForm
     success_url = reverse_lazy('members:profile')
-
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+    
     def get_object(self, queryset=None):
         return self.request.user.record
 
@@ -53,10 +65,17 @@ class Profile(LoginRequiredMixin, generic.edit.UpdateView, generic.View):
 profile_view = Profile.as_view()
 
 
-class AddDependant(generic.CreateView):
+class AddDependant(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
     form_class = DependantForm
     template_name = "add_dependant.html"
-
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+        
     def form_valid(self, form):
         form.instance.member = self.request.user.record
         form.instance.date_joined = datetime.datetime.now().date()
@@ -73,18 +92,25 @@ class AddDependant(generic.CreateView):
 add_dependant_view = AddDependant.as_view()
 
 
-class ViewDependant(generic.DetailView):
+class ViewDependant(LoginRequiredMixin, UserPassesTestMixin, generic.DetailView):
     template_name = "dependant.html"
     model = Dependant
 
 view_dependant_view = ViewDependant.as_view()
 
 
-class EditDependant(generic.UpdateView):
+class EditDependant(LoginRequiredMixin, UserPassesTestMixin, generic.UpdateView):
     model = Dependant
     form_class = DependantForm
     template_name = "edit_dependant.html"
-
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+    
     def form_valid(self, form):
         messages.success(request=self.request, message="Dependant record successfully updated.")
         return super(EditDependant, self).form_valid(form)
@@ -95,9 +121,16 @@ class EditDependant(generic.UpdateView):
 edit_dependant_view = EditDependant.as_view()
 
 
-class DeleteDependant(generic.View):
+class DeleteDependant(LoginRequiredMixin, UserPassesTestMixin, generic.View):
     template_name = "delete_dependant.html"
-
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+    
     def get(self, request, pk):
         d = Dependant.objects.get(pk=pk)
         d.delete()
@@ -107,19 +140,33 @@ class DeleteDependant(generic.View):
 delete_dependant_view = DeleteDependant.as_view()
 
 
-class Dependants(generic.ListView):
+class Dependants(LoginRequiredMixin, UserPassesTestMixin, generic.ListView):
     model = Dependant
     context_object_name = 'dependants'
     template_name = "dependants.html"
-
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+    
 dependants_view = Dependants.as_view()
 
 
-class ClaimCover(LoginRequiredMixin, generic.CreateView):
+class ClaimCover(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
     form_class = ClaimForm
     template_name = "claim.html"
     success_url = reverse_lazy("members:claims")
-
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+    
     def get_context_data(self, **kwargs):
         c = super(ClaimCover, self).get_context_data(**kwargs)
         c["dependant"] = self.request.user.record.dependants.get(pk=self.kwargs['dependant'])
@@ -142,41 +189,58 @@ class ClaimCover(LoginRequiredMixin, generic.CreateView):
 claim_cover_view = ClaimCover.as_view()
 
 
-class Claims(generic.ListView):
+class Claims(LoginRequiredMixin, UserPassesTestMixin, generic.ListView):
     model = Claim
     template_name = "claims.html"
     context_object_name = "claims"
-
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+    
     def get_queryset(self):
         return self.request.user.record.claims
 
 claims_view = Claims.as_view()
 
 
-class Cashbacks(generic.ListView):
+class Cashbacks(LoginRequiredMixin, UserPassesTestMixin, generic.ListView):
     model = Cashback
     template_name = "cashbacks.html"
     context_object_name = "cashbacks"
-
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+    
     def get_queryset(self):
         return self.request.user.record.cashback_records.all()
 
 cashbacks_view = Cashbacks.as_view()
 
 
-class CashbackRequest(generic.CreateView):
+class CashbackRequest(LoginRequiredMixin, UserPassesTestMixin, generic.CreateView):
     template_name = "cashback.html"
     success_url = reverse_lazy("members:cashbacks")
     form_class = CashbackForm
-
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+        
     def form_valid(self, form):
         messages.success(request=self.request, message="Cashback request sent.")
         return super(CashbackRequest, self).form_valid(form)
 
-    def get(self, request, pk):
-        self.initial['member'] = self.request.user.record
-        return super().dispatch(request, *args, **kwargs)
-    
     def form_invalid(self, form):
         messages.error(request=self.request, message="Failed to sent request, please check form.")
         return super(CashbackRequest, self).form_invalid(form)
@@ -188,11 +252,18 @@ class CashbackRequest(generic.CreateView):
 cash_request_view = CashbackRequest.as_view()
 
 
-class DeleteCashBack(generic.View):
-
+class DeleteCashBack(LoginRequiredMixin, UserPassesTestMixin, generic.View):
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+    
     def get(self, request, pk):
         Cashback.objects.get(pk=pk).delete()
-        HttpResponseRedirect(reverse_lazy('members:cashbacks'))
+        return HttpResponseRedirect(reverse_lazy('members:cashbacks'))
 
 delete_cash_back_view = DeleteCashBack.as_view()
 
@@ -214,7 +285,7 @@ class ISucc(generic.TemplateView):
 isucc_view = ISucc.as_view()
 
 
-class ViReq(generic.DetailView):
+class ViReq(LoginRequiredMixin, UserPassesTestMixin, generic.DetailView):
     model = Request
     template_name = "request.html"
     context_object_name = "request"
@@ -222,7 +293,14 @@ class ViReq(generic.DetailView):
 view_request_view = ViReq.as_view()
 
 
-class HeAss(generic.TemplateView):
+class HeAss(LoginRequiredMixin, UserPassesTestMixin, generic.TemplateView):
     template_name = "heass.html"
-
+    
+    def test_func(self):
+        try:
+            r = self.request.user.record
+            return True
+        except Exception as ex:
+            return False
+        
 heath_assessment_view = HeAss.as_view()
