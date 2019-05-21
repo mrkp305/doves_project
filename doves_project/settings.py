@@ -16,6 +16,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+REQUEST_FEE = 30.00
 
 # Application definition
 
@@ -122,3 +123,8 @@ STATICFILES_DIRS = [
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# Paynow (https://developers.paynow.co.zw/docs/)
+PAYNOW_INTEGRATION_ID = "7619"  # TODO: Add to env
+PAYNOW_INTEGRATION_KEY = "1fd26b9a-2aef-4ece-a7f8-66b62dba36c7"  # TODO: Add to env

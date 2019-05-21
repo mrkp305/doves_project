@@ -58,9 +58,9 @@
 
     <div class="content-panel">
         <div class="content-panel-close"><i class="os-icon os-icon-close"></i></div>
-        <div class="element-wrapper"><h6 class="element-header">Dependant(s) on record.</h6>
+        <div class="element-wrapper"><h6 class="element-header">Dependent(s) on record.</h6>
             <div class="element-box-tp">
-                {% for dependant in user.record.dependants.all %}
+                {% for dependant in user.record.dependents.all %}
                     <div class="profile-tile">
                         <div class="profile-tile-box">
                             <div class="pt-avatar-w">
@@ -86,7 +86,7 @@
                             </ul>
                             <div class="pt-btn">
                                 {% if not dependant.is_deceased %}
-                                    <a class="btn btn-danger btn-sm" href="#">Remove Dependant</a>
+                                    <a class="btn btn-danger btn-sm" href="#">Remove Dependent</a>
                                 {% endif %}
                             </div>
                         </div>

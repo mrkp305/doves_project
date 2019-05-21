@@ -1,4 +1,5 @@
 from datetime import datetime, date
+import re
 
 from django.db import models
 from django.core.validators import ValidationError, RegexValidator
@@ -39,7 +40,7 @@ class Member(TimeStampedModel):
     )
     first_name = models.CharField(
         verbose_name=_("First name"), max_length=255,
-        help_text=_("Member's first name(s).")
+        help_text=_("Member's first name(s)."),
     )
     last_name = models.CharField(
         verbose_name=_("Last name"), max_length=255,
@@ -90,24 +91,25 @@ class Member(TimeStampedModel):
     def full_name(self):
         return f"{self.last_name} {self.first_name}".title()
     full_name.fget.short_description = _("Full name(s)")
-    
+
     @property
     def marital_status_display(self):
         return self.get_marital_status_display()
     marital_status_display.fget.short_description = _("Marital Status")
-    
+
     @property
     def age(self):
         today = date.today()
-        age = today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+        age = today.year - self.date_of_birth.year - \
+            ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
         return age
     age.fget.short_description = _("Age")
-    
+
     @property
     def dependant_count(self):
         return self.dependants.count()
     dependant_count.fget.short_description = _("Dependants")
-        
+
     @property
     def dependant_count_percentage(self):
         return (self.dependant_count/self.policy.dependants_per_holder) * 100
@@ -157,16 +159,23 @@ class Member(TimeStampedModel):
         return False
     cash_back_eligible.fget.short_description = _("Cash back eligibile?")
 
-
     def clean(self):
         super(Member, self).clean()
-        if self.date_of_birth > datetime.now().date():
-            raise ValidationError(_("Date of birth cannot be greater than today's date."))
-        else:
-            if self.age < 16:
-                raise ValidationError(
-                    {'date_of_birth': _("Policy holders can only be 16 years and older.")}
-                )
+        regex = re.compile(r'^[a-zA-Z\']+$', re.U)
+        if not regex.match(self.first_name):
+            raise ValidationError({"first_name": 'Invalid name'})
+
+        if not regex.match(self.last_name):
+            raise ValidationError({"last_name": 'Invalid name'})
+
+        if self.date_of_birth:
+            if self.date_of_birth > datetime.now().date():
+                raise ValidationError(_("Date of birth cannot be greater than today's date."))
+            else:
+                if self.age < 16:
+                    raise ValidationError(
+                        {'date_of_birth': _("Policy holders can only be 16 years and older.")}
+                    )
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -229,7 +238,7 @@ class Dependant(TimeStampedModel):
         return f"{self.full_name}, {self.sex}".title()
 
     def get_absolute_url(self):
-        return reverse('members:view_dependant', kwargs={'pk':self.pk})
+        return reverse('members:view_dependant', kwargs={'pk': self.pk})
 
     @property
     def full_name(self):
@@ -240,15 +249,15 @@ class Dependant(TimeStampedModel):
     def age(self):
         today = date.today()
         age = today.year - self.date_of_birth.year - (
-        (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+            (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
         return age
     age.fget.short_description = _("Age")
-    
+
     @property
     def relationship_display(self):
         return self.get_relationship_display()
     relationship_display.fget.short_description = _("Relationship")
-    
+
     @property
     def member_name(self):
         return self.member.full_name
@@ -257,17 +266,24 @@ class Dependant(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
-    
+
     def clean(self):
-        super(Dependant, self).clean()
-        if self.date_of_birth > datetime.now().date():
-            raise ValidationError(
-                {'date_of_birth': _("Date of birth cannot be greater than today's date.")}
-            )
+        regex = re.compile(r'^[a-zA-Z\']+$', re.U)
+        if not regex.match(self.first_name):
+            raise ValidationError({"first_name": 'Invalid name'})
+
+        if not regex.match(self.last_name):
+            raise ValidationError({"last_name": 'Invalid name'})
+
+        if self.date_of_birth:
+            if self.date_of_birth > datetime.now().date():
+                raise ValidationError(
+                    {'date_of_birth': _("Date of birth cannot be greater than today's date.")}
+                )
 
         if self.relationship == "O" and (self.relationship_description is None or self.relationship_description == ""):
             raise ValidationError(
-                {'relationship_description': _("Explain the relationship with dependant."),}
+                {'relationship_description': _("Explain the relationship with dependant."), }
             )
 
         if not self.pk:
@@ -289,6 +305,7 @@ class Dependant(TimeStampedModel):
                             'policy': policy.name.title(),
                         }
                     )
+            super(Dependant, self).clean()
 
 
 class Claim(TimeStampedModel):
@@ -321,12 +338,13 @@ class Claim(TimeStampedModel):
 
     def clean(self):
         super(Claim, self).clean()
-        if self.date_of_death > datetime.now().date():
-            raise ValidationError(
-                {
-                    'date_of_death': "Date of death cannot be greater than today's date!"
-                }
-            )
+        if self.date_of_death:
+            if self.date_of_death > datetime.now().date():
+                raise ValidationError(
+                    {
+                        'date_of_death': "Date of death cannot be greater than today's date!"
+                    }
+                )
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -402,6 +420,15 @@ class Request(TimeStampedModel):
     def coordinates(self):
         return f"{self.lat, self.lng}"
 
+    @property
+    def paid_for(self):
+        if hasattr(self, "payments"):
+            for payment in self.payments.all():
+                if payment.transaction.completed:
+                    return True
+        return False
+    paid_for.fget.short_description = _("Paid For")
+
     def get_absolute_url(self):
         return reverse(
             'view_request', kwargs={
@@ -432,3 +459,65 @@ class Cashback(TimeStampedModel):
     class Meta:
         verbose_name = _("Cash back request")
         verbose_name_plural = _("Cash back requests")
+
+
+class TransactionManager(models.Manager):
+    """Custom manager to Transactions
+    """
+
+    def create_transaction(self, **kwargs):
+        try:
+            trans = self.model(**kwargs)
+        except Exception as ex:
+            # TODO: Log error
+            return None
+        else:
+            trans.save(using=self._db)
+            return trans
+
+
+class Transaction(TimeStampedModel):
+    """Repr(s) a transaction involving payments
+    Based on Paynow
+    """
+    poll_url = models.URLField(null=True, blank=True, editable=False)
+    url = models.URLField(null=True, blank=True, editable=False)
+    reference = models.CharField(
+        verbose_name=_("Reference"), max_length=255, null=True, blank=True,
+    )
+    # Value is the amount expected to be paid
+    value = models.DecimalField(verbose_name=_("Value"), max_digits=19,
+                                decimal_places=2, editable=False)
+    # Amount paid is the actual amount paid as returned
+    # by Paynow
+    paid = models.DecimalField(verbose_name=_("Amount paid"), max_digits=19,
+                               decimal_places=2, null=True, blank=True, editable=False)
+    completed = models.BooleanField(
+        default=False, verbose_name=_("Indicates if transaction was complete"), editable=False
+    )
+
+    class Meta:
+        verbose_name = _("Transaction")
+        verbose_name_plural = _("Transactions")
+        ordering = ("-created", )
+
+    def complete(self):
+        if not self.paid:
+            return
+        self.completed = True
+        self.save()
+        return 1
+
+
+class RequestPayment(TimeStampedModel):
+
+    request = models.ForeignKey(
+        to=Request, on_delete=models.CASCADE, related_name="payments",
+    )
+    transaction = models.ForeignKey(
+        to=Transaction, on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        verbose_name = _("Request Payment")
+        verbose_name_plural = _("Request Payments")
